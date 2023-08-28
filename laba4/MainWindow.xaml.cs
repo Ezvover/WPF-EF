@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Data.Entity.SqlServer;
 using System.Data.SqlClient;
 using System.IO;
 using System.Linq;
@@ -18,128 +19,101 @@ namespace laba4
     /// </summary>
     public partial class MainWindow : Window
     {
-        List<Goods> goodsList = new List<Goods>();
         List<string> strList = new List<string>();
 
         public MainWindow()
         {
             InitializeComponent();
-
             ToGrid();
           
             MainGrid.SelectedIndex = 0; // Устанавливаем первый элемент как выбранный
             MainGrid.IsReadOnly = true;
-
-            for (int i = 0; i < goodsList.Count; i++)
-            {
-                strList.Add(goodsList[i].Category);
-            }
-            var strList2 = strList.Distinct();
-            FilterBOx.ItemsSource = strList2;
-
-          
         }
 
         public void ToGrid()
         {
-            goodsList.Clear();
-            MainGrid.ItemsSource = null;
-            string connectionString = ConfigurationManager.ConnectionStrings["ConnectString"].ConnectionString;
-            string selectQuery = "SELECT id, name, [desc], category, rate, price, amount, other FROM Goods";
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (var context = new CodeFirstModel())
             {
-                connection.Open();
-                using (SqlCommand command = new SqlCommand(selectQuery, connection))
+                try
                 {
-                    using (SqlDataReader reader = command.ExecuteReader())
-                    {
-                        while (reader.Read())
+                    var goodsList = context.Goods
+                        .ToList() // Fetch all data to memory
+                        .Select(g => new Goods
                         {
-                            Goods goods = new Goods();
-                            goods.Id = Convert.ToInt32(reader["id"]);
-                            goods.Name = reader["name"].ToString();
-                            goods.Desc = reader["desc"].ToString();
-                            goods.Category = reader["category"].ToString();
-                            goods.Rate = Convert.ToInt32(reader["rate"]);
-                            goods.Price = Convert.ToDouble(reader["price"]);
-                            goods.Amount = Convert.ToInt32(reader["amount"]);
+                            Id = g.id,
+                            Name = g.name,
+                            Desc = g.desc,
+                            Category = g.category,
+                            Rate = g.rate ?? 0,
+                            Price = g.price ?? 0,
+                            Amount = g.amount ?? 0,
+                            Other = File.Exists(g.other) ? new Uri(g.other).ToString() : null
+                        })
+                        .ToList(); // Materialize the projection
 
-                            string imagePath = reader["other"].ToString();
-                            if (File.Exists(imagePath))
-                            {
-                                goods.Other = new Uri(imagePath).ToString();
-                            }
-                            goodsList.Add(goods);
-                        }
+                    MainGrid.ItemsSource = goodsList;
+
+                    strList.Clear();
+                    for (int i = 0; i < goodsList.Count; i++)
+                    {
+                        strList.Add(goodsList[i].Category);
+                    }
+                    var strList2 = strList.Distinct();
+                    FilterBOx.ItemsSource = strList2;
+                }
+                catch (Exception ex)
+                {
+                    if (ex.InnerException != null)
+                    {
+                        MessageBox.Show("Inner Exception: " + ex.InnerException.Message);
+                    }
+                    else
+                    {
+                        MessageBox.Show("Error: " + ex.Message);
                     }
                 }
-
-                connection.Close();
-                MainGrid.ItemsSource = goodsList;
             }
-
-            strList.Clear();
-            for (int i = 0; i < goodsList.Count; i++)
-            {
-                strList.Add(goodsList[i].Category);
-            }
-            var strList2 = strList.Distinct();
-            FilterBOx.ItemsSource = strList2;
         }
 
         private void Button_Click(object sender, RoutedEventArgs e) // delete button
         {
-            if (MainGrid.SelectedItem!= null) 
+            if (MainGrid.SelectedItem != null)
             {
                 var selectedObject = MainGrid.SelectedItem as Goods;
-                MainGrid.ItemsSource = null;
-                for (int i = 0; i < goodsList.Count; i++)
+
+                using (var context = new CodeFirstModel())
                 {
-                    if (goodsList[i].Equals(selectedObject))
+                    using (var dbContextTransaction = context.Database.BeginTransaction())
                     {
-                        string connectionString = ConfigurationManager.ConnectionStrings["ConnectString"].ConnectionString;
-                        string deleteGoodsQuery = "DELETE FROM Goods WHERE id = @id";
-                        string deleteCatalogQuery = "DELETE FROM Category WHERE id = @id";
-
-                        using (SqlConnection connection = new SqlConnection(connectionString))
+                        try
                         {
-                            connection.Open();
-                            SqlTransaction transaction = connection.BeginTransaction();
-                            try
+                            var goodsToDelete = context.Goods.FirstOrDefault(g => g.id == selectedObject.Id);
+
+                            if (goodsToDelete != null)
                             {
-                                using (SqlCommand command = new SqlCommand(deleteCatalogQuery, connection, transaction))
+                                if (goodsToDelete.Category1 != null)
                                 {
-                                    command.Parameters.AddWithValue("@id", goodsList[i].Id);
-                                    command.ExecuteNonQuery();
+                                    context.Categories.Remove(goodsToDelete.Category1);
                                 }
 
-                                using (SqlCommand command = new SqlCommand(deleteGoodsQuery, connection, transaction))
-                                {
-                                    command.Parameters.AddWithValue("@id", goodsList[i].Id);
-                                    command.ExecuteNonQuery();
-                                }
+                                context.Goods.Remove(goodsToDelete);
+                                context.SaveChanges();
+                                dbContextTransaction.Commit();
 
-                                transaction.Commit();
-                            }
-                            catch (Exception ex)
-                            {
-                                transaction.Rollback();
-                                throw;
-                            }
-                            finally
-                            {
-                                connection.Close();
+                                ToGrid();
                             }
                         }
-
-                        goodsList.Remove(goodsList[i]);
+                        catch (Exception ex)
+                        {
+                            dbContextTransaction.Rollback();
+                            MessageBox.Show(ex.Message);
+                        }
                     }
                 }
-                MainGrid.ItemsSource = goodsList;
-                MainGrid.SelectedIndex = 0; // Устанавливаем первый элемент как выбранный
+
             }
         }
+
 
         private void SearchButton_Click(object sender, RoutedEventArgs e) // sortByPrice
         {
@@ -148,103 +122,72 @@ namespace laba4
                 int minPrice = int.Parse(SearchText.Text);
                 int maxPrice = int.Parse(SearchText2.Text);
 
-                string connectionString = ConfigurationManager.ConnectionStrings["ConnectString"].ConnectionString;
-                string query = $"SELECT id, name, [desc], category, rate, price, amount, other FROM Goods WHERE price >= {minPrice} AND price <= {maxPrice}";
-
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (var context = new CodeFirstModel())
                 {
-                    connection.Open();
-                    using (SqlCommand command = new SqlCommand(query, connection))
-                    {
-                        using (SqlDataReader reader = command.ExecuteReader())
+                    var filteredGoods = context.Goods
+                        .Where(g => g.price >= minPrice && g.price <= maxPrice)
+                        .Select(g => new Goods
                         {
-                            List<Goods> tempList = new List<Goods>();
+                            Id = g.id,
+                            Name = g.name,
+                            Desc = g.desc,
+                            Category = g.category,
+                            Rate = g.rate ?? 0,
+                            Price = g.price ?? 0,
+                            Amount = g.amount ?? 0,
+                            Other = g.other
+                        })
+                        .ToList();
 
-                            while (reader.Read())
-                            {
-                                Goods goods = new Goods();
-                                goods.Id = Convert.ToInt32(reader["id"]);
-                                goods.Name = reader["name"].ToString();
-                                goods.Desc = reader["desc"].ToString();
-                                goods.Category = reader["category"].ToString();
-                                goods.Rate = Convert.ToInt32(reader["rate"]);
-                                goods.Price = Convert.ToDouble(reader["price"]);
-                                goods.Amount = Convert.ToInt32(reader["amount"]);
-                                goods.Other = reader["other"].ToString();
-
-                                tempList.Add(goods);
-                            }
-
-                            MainGrid.ItemsSource = tempList;
-                        }
-                    }
-                    connection.Close();
+                    MainGrid.ItemsSource = filteredGoods;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
-            MainGrid.SelectedIndex = 0; // Устанавливаем первый элемент как выбранный
+            MainGrid.SelectedIndex = 0; // Set the first item as selected
         }
+
 
 
         private void Button_Click_1(object sender, RoutedEventArgs e) // CategorySort
         {
-            if (FilterBOx.SelectedItem!= null)
+            if (FilterBOx.SelectedItem != null)
             {
-                List<Goods> tempList = new List<Goods>();
-                MainGrid.ItemsSource = null;
+                string selectedCategory = FilterBOx.Text;
 
-                string connectionString = ConfigurationManager.ConnectionStrings["ConnectString"].ConnectionString;
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                using (var context = new CodeFirstModel())
                 {
-                    connection.Open(); // процедура
                     try
                     {
-                        string storedProcedure = @"
-                    CREATE PROCEDURE GetGoodsByCategory
-                        @Category nvarchar(50)
-                    AS
-                    BEGIN
-                        SELECT id, name, [desc], category, rate, price, amount, other FROM Goods WHERE category = @Category;
-                    END";
-                        using (SqlCommand command = new SqlCommand(storedProcedure, connection))
-                        {
-                            command.ExecuteNonQuery();
-                        }
-                    }
-                    catch
-                    {
-
-                    }
-
-                    using (SqlCommand command = new SqlCommand("GetGoodsByCategory", connection))
-                    {
-                        command.CommandType = CommandType.StoredProcedure;
-                        command.Parameters.Add(new SqlParameter("@Category", FilterBOx.Text));
-                        using (SqlDataReader reader = command.ExecuteReader())
-                        {
-                            while (reader.Read())
+                        var goodsInCategory = context.Goods
+                            .Where(g => g.category == selectedCategory)
+                            .Select(g => new Goods
                             {
-                                Goods goods = new Goods();
-                                goods.Id = reader.GetInt32(0);
-                                goods.Name = reader.GetString(1);
-                                goods.Desc = reader.GetString(2);
-                                goods.Category = reader.GetString(3);
-                                goods.Rate = reader.GetInt32(4);
-                                goods.Price = reader.GetInt32(5);
-                                goods.Amount = reader.GetInt32(6);
-                                goods.Other = reader.GetString(7);
-                                tempList.Add(goods);
-                            }
-                        }
+                                Id = g.id,
+                                Name = g.name,
+                                Desc = g.desc,
+                                Category = g.category,
+                                Rate = g.rate ?? 0,
+                                Price = g.price ?? 0,
+                                Amount = g.amount ?? 0,
+                                Other = g.other
+                            })
+                            .ToList();
+
+                        MainGrid.ItemsSource = goodsInCategory;
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
                     }
                 }
-                MainGrid.ItemsSource = tempList;
-                MainGrid.SelectedIndex = 0; // Устанавливаем первый элемент как выбранный
+
+                MainGrid.SelectedIndex = 0; // Set the first item as selected
             }
         }
+
 
 
         private void Button_Click_2(object sender, RoutedEventArgs e) // add window
@@ -257,6 +200,10 @@ namespace laba4
         private void UpdateButton_Click(object sender, RoutedEventArgs e)
         {
             ToGrid();
+            FilterBOx.SelectedItem= null;
+            SearchText.Clear();
+            SearchText2.Clear();
+            SearchText3.Clear();
             MainGrid.SelectedIndex = 0; // Устанавливаем первый элемент как выбранный
         }
 
@@ -264,46 +211,35 @@ namespace laba4
         {
             string searchText = SearchText3.Text;
 
-            string connectionString = ConfigurationManager.ConnectionStrings["ConnectString"].ConnectionString;
-            string query = $"SELECT id, name, [desc], category, rate, price, amount, other FROM Goods WHERE " +
-                $"name LIKE '%{searchText}%' OR " +
-                $"[desc] LIKE '%{searchText}%' OR " +
-                $"other LIKE '%{searchText}%' OR " +
-                $"category LIKE '%{searchText}%' OR " +
-                $"CONVERT(NVARCHAR, price) LIKE '%{searchText}%' OR " +
-                $"CONVERT(NVARCHAR, amount) LIKE '%{searchText}%'";
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (var context = new CodeFirstModel())
             {
-                connection.Open();
-                using (SqlCommand command = new SqlCommand(query, connection))
-                {
-                    using (SqlDataReader reader = command.ExecuteReader())
+                var searchResults = context.Goods
+                    .Where(g =>
+                        g.name.Contains(searchText) ||
+                        g.desc.Contains(searchText) ||
+                        g.other.Contains(searchText) ||
+                        g.category.Contains(searchText) ||
+                        SqlFunctions.StringConvert((double)g.price).Contains(searchText) ||
+                        SqlFunctions.StringConvert((double)g.amount).Contains(searchText))
+                    .Select(g => new Goods
                     {
-                        List<Goods> tempList2 = new List<Goods>();
+                        Id = g.id,
+                        Name = g.name,
+                        Desc = g.desc,
+                        Category = g.category,
+                        Rate = g.rate ?? 0,
+                        Price = g.price ?? 0,
+                        Amount = g.amount ?? 0,
+                        Other = g.other
+                    })
+                    .ToList();
 
-                        while (reader.Read())
-                        {
-                            Goods goods = new Goods();
-                            goods.Id = Convert.ToInt32(reader["id"]);
-                            goods.Name = reader["name"].ToString();
-                            goods.Desc = reader["desc"].ToString();
-                            goods.Category = reader["category"].ToString();
-                            goods.Rate = Convert.ToInt32(reader["rate"]);
-                            goods.Price = Convert.ToInt32(reader["price"]);
-                            goods.Amount = Convert.ToInt32(reader["amount"]);
-                            goods.Other = reader["other"].ToString();
-
-                            tempList2.Add(goods);
-                        }
-
-                        MainGrid.ItemsSource = tempList2;
-                    }
-                }
-                connection.Close();
+                MainGrid.ItemsSource = searchResults;
             }
-            MainGrid.SelectedIndex = 0; // Устанавливаем первый элемент как выбранный
+
+            MainGrid.SelectedIndex = 0; // Set the first item as selected
         }
+
 
 
         private void Button_Click_3(object sender, RoutedEventArgs e) // edit

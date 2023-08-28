@@ -60,7 +60,7 @@ namespace laba4
 
 
 
-        public void ToClass()
+        public async Task ToClass()
         {
             CheckId();
 
@@ -80,7 +80,7 @@ namespace laba4
 
             goods.Rate = int.Parse(RateTextBox.Text);
 
-            goods.Price = double.Parse(PriceTextBox.Text);
+            goods.Price = int.Parse(PriceTextBox.Text);
 
             goods.Amount = int.Parse(AmountTextBox.Text);
 
@@ -102,49 +102,42 @@ namespace laba4
 
             goods.Picture = imageBytes;
 
-
-            string connectionString = ConfigurationManager.ConnectionStrings["ConnectString"].ConnectionString;
-            string insertGoodsQuery = "INSERT INTO Goods (id, name, [desc], category, rate, price, amount, other, picture) VALUES (@id, @name, @desc, @category, @rate, @price, @amount, @other, @picture)";
-            string insertCategoryQuery = "INSERT INTO Category (id, category) VALUES (@id, @category)";
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            using (var context = new CodeFirstModel())
             {
-                connection.Open();
-                SqlTransaction transaction = connection.BeginTransaction();
-
-                try
+                using (var dbContextTransaction = context.Database.BeginTransaction())
                 {
-                    using (SqlCommand command = new SqlCommand(insertGoodsQuery, connection, transaction))
+                    try
                     {
-                        command.Transaction = transaction;
-                        command.Parameters.AddWithValue("@id", goods.Id);
-                        command.Parameters.AddWithValue("@name", goods.Name);
-                        command.Parameters.AddWithValue("@desc", goods.Desc);
-                        command.Parameters.AddWithValue("@category", goods.Category);
-                        command.Parameters.AddWithValue("@rate", goods.Rate);
-                        command.Parameters.AddWithValue("@price", goods.Price);
-                        command.Parameters.AddWithValue("@amount", goods.Amount);
-                        command.Parameters.AddWithValue("@other", goods.Other);
-                        command.Parameters.AddWithValue("@picture", goods.Picture);
+                        Good1 goodsEntity = new Good1
+                        {
+                            id = goods.Id,
+                            name = goods.Name,
+                            desc = goods.Desc,
+                            category = goods.Category,
+                            rate = goods.Rate,
+                            price = goods.Price,
+                            amount = goods.Amount,
+                            other = goods.Other,
+                            picture = goods.Picture
+                        };
 
-                        command.ExecuteNonQuery();
+                        Category1 categoryEntity = new Category1
+                        {
+                            id = goods.Id,
+                            category1 = goods.Category
+                        };
+
+                        context.Goods.Add(goodsEntity);
+                        context.Categories.Add(categoryEntity);
+                        await context.SaveChangesAsync(); // Асинхронное сохранение изменений
+
+                        dbContextTransaction.Commit();
                     }
-
-                    using (SqlCommand insertCommand = new SqlCommand(insertCategoryQuery, connection, transaction))
+                    catch (Exception ex)
                     {
-                        insertCommand.Transaction = transaction;
-                        insertCommand.Parameters.AddWithValue("@id", goods.Id);
-                        insertCommand.Parameters.AddWithValue("@category", goods.Category);
-
-                        insertCommand.ExecuteNonQuery();
+                        dbContextTransaction.Rollback();
+                        MessageBox.Show(ex.Message);
                     }
-
-                    transaction.Commit();
-                }
-                catch (Exception ex)
-                {
-                    transaction.Rollback();
-                    MessageBox.Show(ex.Message);
                 }
             }
 

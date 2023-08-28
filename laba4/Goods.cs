@@ -8,7 +8,7 @@ namespace laba4
         {
 
         }
-        public Goods(int id, string name, string desc, string category, int rate, double price, int amount, string other)
+        public Goods(int id, string name, string desc, string category, int rate, int price, int amount, string other)
         {
             Id = id;
             Name = name;
@@ -25,7 +25,7 @@ namespace laba4
         public string Desc { get; set; }
         public string Category { get; set; }
         public int Rate { get; set; }
-        public double Price { get; set; }
+        public int Price { get; set; }
         public int Amount { get; set; }
         public string Other { get; set; }
         public byte[] Picture { get; set; }

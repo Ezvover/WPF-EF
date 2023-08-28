@@ -6,6 +6,7 @@ namespace laba4
     using System.ComponentModel.DataAnnotations.Schema;
     using System.Data.Entity.Spatial;
 
+    [Table("Goods")]
     public partial class Good1
     {
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
