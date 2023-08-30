@@ -49,7 +49,7 @@ namespace laba4
                         while (reader.Read())
                         {
                             Goods goods = new Goods();
-                            goods.Id = Convert.ToInt32(reader["id"]);
+                            goods.id = Convert.ToInt32(reader["id"]);
 
                             goodsList.Add(goods);
                         }
@@ -66,23 +66,23 @@ namespace laba4
 
             if (goodsList.Count > 0)
             {
-                freeId = goodsList.Last().Id;
+                freeId = goodsList.Last().id;
                 freeId++;
             }
             else
             {
                 freeId = 0;
             }
-            goods.Id = freeId;
-            goods.Name = NameTextBox.Text;
-            goods.Desc = DescTextBox.Text;
-            goods.Category = CategoryTextBox.Text;
+            goods.id = freeId;
+            goods.name = NameTextBox.Text;
+            goods.desc = DescTextBox.Text;
+            goods.category = CategoryTextBox.Text;
 
-            goods.Rate = int.Parse(RateTextBox.Text);
+            goods.rate = int.Parse(RateTextBox.Text);
 
-            goods.Price = int.Parse(PriceTextBox.Text);
+            goods.price = int.Parse(PriceTextBox.Text);
 
-            goods.Amount = int.Parse(AmountTextBox.Text);
+            goods.amount = int.Parse(AmountTextBox.Text);
 
 
             string imagePath = $"C:\\Users\\vovas\\Desktop\\repos\\WPF-Shop-Service\\laba4\\bin\\Debug\\net7.0-windows\\images\\{NameTextBox.Text}.jpg";
@@ -91,16 +91,16 @@ namespace laba4
 
             if (File.Exists(imagePath))
             {
-                goods.Other = imagePath;
+                goods.other = imagePath;
                 imageBytes = File.ReadAllBytes(imagePath);
             }
             else
             {
-                goods.Other = defaultImagePath;
+                goods.other = defaultImagePath;
                 imageBytes = File.ReadAllBytes(defaultImagePath);
             }
 
-            goods.Picture = imageBytes;
+            goods.picture = imageBytes;
 
             using (var context = new CodeFirstModel())
             {
@@ -108,23 +108,23 @@ namespace laba4
                 {
                     try
                     {
-                        Good1 goodsEntity = new Good1
+                        Goods goodsEntity = new Goods
                         {
-                            id = goods.Id,
-                            name = goods.Name,
-                            desc = goods.Desc,
-                            category = goods.Category,
-                            rate = goods.Rate,
-                            price = goods.Price,
-                            amount = goods.Amount,
-                            other = goods.Other,
-                            picture = goods.Picture
+                            id = goods.id,
+                            name = goods.name,
+                            desc = goods.desc,
+                            category = goods.category,
+                            rate = goods.rate,
+                            price = goods.price,
+                            amount = goods.amount,
+                            other = goods.other,
+                            picture = goods.picture
                         };
 
-                        Category1 categoryEntity = new Category1
+                        Categories categoryEntity = new Categories
                         {
-                            id = goods.Id,
-                            category1 = goods.Category
+                            id = goods.id,
+                            category1 = goods.category
                         };
 
                         context.Goods.Add(goodsEntity);

@@ -40,14 +40,14 @@ namespace laba4
                         .ToList() // Fetch all data to memory
                         .Select(g => new Goods
                         {
-                            Id = g.id,
-                            Name = g.name,
-                            Desc = g.desc,
-                            Category = g.category,
-                            Rate = g.rate ?? 0,
-                            Price = g.price ?? 0,
-                            Amount = g.amount ?? 0,
-                            Other = File.Exists(g.other) ? new Uri(g.other).ToString() : null
+                            id = g.id,
+                            name = g.name,
+                            desc = g.desc,
+                            category = g.category,
+                            rate = g.rate ?? 0,
+                            price = g.price ?? 0,
+                            amount = g.amount ?? 0,
+                            other = File.Exists(g.other) ? new Uri(g.other).ToString() : null
                         })
                         .ToList(); // Materialize the projection
 
@@ -56,7 +56,7 @@ namespace laba4
                     strList.Clear();
                     for (int i = 0; i < goodsList.Count; i++)
                     {
-                        strList.Add(goodsList[i].Category);
+                        strList.Add(goodsList[i].category);
                     }
                     var strList2 = strList.Distinct();
                     FilterBOx.ItemsSource = strList2;
@@ -87,7 +87,7 @@ namespace laba4
                     {
                         try
                         {
-                            var goodsToDelete = context.Goods.FirstOrDefault(g => g.id == selectedObject.Id);
+                            var goodsToDelete = context.Goods.FirstOrDefault((System.Linq.Expressions.Expression<Func<Goods, bool>>)(g => g.id == selectedObject.id));
 
                             if (goodsToDelete != null)
                             {
@@ -110,12 +110,12 @@ namespace laba4
                         }
                     }
                 }
-
             }
+
+            MainGrid.SelectedIndex = 0; // Set the first item as selected
         }
 
-
-        private void SearchButton_Click(object sender, RoutedEventArgs e) // sortByPrice
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
@@ -126,17 +126,6 @@ namespace laba4
                 {
                     var filteredGoods = context.Goods
                         .Where(g => g.price >= minPrice && g.price <= maxPrice)
-                        .Select(g => new Goods
-                        {
-                            Id = g.id,
-                            Name = g.name,
-                            Desc = g.desc,
-                            Category = g.category,
-                            Rate = g.rate ?? 0,
-                            Price = g.price ?? 0,
-                            Amount = g.amount ?? 0,
-                            Other = g.other
-                        })
                         .ToList();
 
                     MainGrid.ItemsSource = filteredGoods;
@@ -149,9 +138,7 @@ namespace laba4
             MainGrid.SelectedIndex = 0; // Set the first item as selected
         }
 
-
-
-        private void Button_Click_1(object sender, RoutedEventArgs e) // CategorySort
+        private void Button_Click_1(object sender, RoutedEventArgs e) // categorysort
         {
             if (FilterBOx.SelectedItem != null)
             {
@@ -163,17 +150,6 @@ namespace laba4
                     {
                         var goodsInCategory = context.Goods
                             .Where(g => g.category == selectedCategory)
-                            .Select(g => new Goods
-                            {
-                                Id = g.id,
-                                Name = g.name,
-                                Desc = g.desc,
-                                Category = g.category,
-                                Rate = g.rate ?? 0,
-                                Price = g.price ?? 0,
-                                Amount = g.amount ?? 0,
-                                Other = g.other
-                            })
                             .ToList();
 
                         MainGrid.ItemsSource = goodsInCategory;
@@ -187,7 +163,6 @@ namespace laba4
                 MainGrid.SelectedIndex = 0; // Set the first item as selected
             }
         }
-
 
 
         private void Button_Click_2(object sender, RoutedEventArgs e) // add window
@@ -207,7 +182,7 @@ namespace laba4
             MainGrid.SelectedIndex = 0; // Устанавливаем первый элемент как выбранный
         }
 
-        private void SearchButton2_Click(object sender, RoutedEventArgs e) // PartSearch
+        private void SearchButton2_Click(object sender, RoutedEventArgs e) // partSearch
         {
             string searchText = SearchText3.Text;
 
@@ -221,17 +196,6 @@ namespace laba4
                         g.category.Contains(searchText) ||
                         SqlFunctions.StringConvert((double)g.price).Contains(searchText) ||
                         SqlFunctions.StringConvert((double)g.amount).Contains(searchText))
-                    .Select(g => new Goods
-                    {
-                        Id = g.id,
-                        Name = g.name,
-                        Desc = g.desc,
-                        Category = g.category,
-                        Rate = g.rate ?? 0,
-                        Price = g.price ?? 0,
-                        Amount = g.amount ?? 0,
-                        Other = g.other
-                    })
                     .ToList();
 
                 MainGrid.ItemsSource = searchResults;
@@ -239,7 +203,6 @@ namespace laba4
 
             MainGrid.SelectedIndex = 0; // Set the first item as selected
         }
-
 
 
         private void Button_Click_3(object sender, RoutedEventArgs e) // edit

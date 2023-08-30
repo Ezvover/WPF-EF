@@ -34,17 +34,17 @@
                 </Style>
             </DataGrid.Resources>
             <DataGrid.Columns>
-                <DataGridTextColumn Header="ID" Binding="{Binding Id}" ElementStyle="{StaticResource CenteredCellStyle}" />
-                <DataGridTextColumn Header="Name" Binding="{Binding Name}" ElementStyle="{StaticResource CenteredCellStyle}" />
-                <DataGridTextColumn Header="Description" Binding="{Binding Desc}" ElementStyle="{StaticResource CenteredCellStyle}" />
-                <DataGridTextColumn Header="Category" Binding="{Binding Category}" ElementStyle="{StaticResource CenteredCellStyle}" />
-                <DataGridTextColumn Header="Rate" Binding="{Binding Rate}" ElementStyle="{StaticResource CenteredCellStyle}" />
-                <DataGridTextColumn Header="Price" Binding="{Binding Price}" ElementStyle="{StaticResource CenteredCellStyle}" />
-                <DataGridTextColumn Header="Amount" Binding="{Binding Amount}" ElementStyle="{StaticResource CenteredCellStyle}" />
+                <DataGridTextColumn Header="ID" Binding="{Binding id}" ElementStyle="{StaticResource CenteredCellStyle}" />
+                <DataGridTextColumn Header="Name" Binding="{Binding name}" ElementStyle="{StaticResource CenteredCellStyle}" />
+                <DataGridTextColumn Header="Description" Binding="{Binding desc}" ElementStyle="{StaticResource CenteredCellStyle}" />
+                <DataGridTextColumn Header="Category" Binding="{Binding category}" ElementStyle="{StaticResource CenteredCellStyle}" />
+                <DataGridTextColumn Header="Rate" Binding="{Binding rate}" ElementStyle="{StaticResource CenteredCellStyle}" />
+                <DataGridTextColumn Header="Price" Binding="{Binding price}" ElementStyle="{StaticResource CenteredCellStyle}" />
+                <DataGridTextColumn Header="Amount" Binding="{Binding amount}" ElementStyle="{StaticResource CenteredCellStyle}" />
                 <DataGridTemplateColumn Header="Image">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
-                            <Image Source="{Binding Other}" Width="100" Height="50" />
+                            <Image Source="{Binding other}" Width="100" Height="50" />
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>

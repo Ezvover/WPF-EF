@@ -24,8 +24,6 @@ namespace laba4
     public partial class EditWindow : Window
     {
 
-        private Goods selectedGoods;
-
         int id = 0;
 
         Goods goods = new Goods();
@@ -35,13 +33,13 @@ namespace laba4
             InitializeComponent();
 
 
-            Goods goods2;
+            Goods goods;
             XmlSerializer xmlSerializer = new XmlSerializer(typeof(Goods));
             using (FileStream stream = new FileStream($"TempEditGood.xml", FileMode.OpenOrCreate))
             {
-                goods2 = (xmlSerializer.Deserialize(stream) as Goods);
+                goods = (xmlSerializer.Deserialize(stream) as Goods);
             }
-            id = goods2.Id;
+            id = goods.id;
             LoadDB();
             ToText();
         }
@@ -54,29 +52,18 @@ namespace laba4
             {
                 var loadedGoods = context.Goods
                     .Where(g => g.id == id)
-                    .Select(g => new Goods
-                    {
-                        Id = g.id,
-                        Name = g.name,
-                        Desc = g.desc,
-                        Category = g.category,
-                        Rate = g.rate ?? 0,
-                        Price = g.price ?? 0,
-                        Amount = g.amount ?? 0,
-                        Other = g.other
-                    })
-                    .FirstOrDefault(); // first lement
+                    .FirstOrDefault(); // first element
 
                 if (loadedGoods != null)
                 {
-                    goods.Id = loadedGoods.Id;
-                    goods.Name = loadedGoods.Name;
-                    goods.Desc = loadedGoods.Desc;
-                    goods.Category = loadedGoods.Category;
-                    goods.Rate = loadedGoods.Rate;
-                    goods.Price = loadedGoods.Price;
-                    goods.Amount = loadedGoods.Amount;
-                    goods.Other = loadedGoods.Other;
+                    goods.id = loadedGoods.id;
+                    goods.name = loadedGoods.name;
+                    goods.desc = loadedGoods.desc;
+                    goods.category = loadedGoods.category;
+                    goods.rate = loadedGoods.rate;
+                    goods.price = loadedGoods.price;
+                    goods.amount = loadedGoods.amount;
+                    goods.other = loadedGoods.other;
 
                     goodsList.Add(goods);
                 }
@@ -84,19 +71,20 @@ namespace laba4
         }
 
 
+
         public void ToText()
         {
-            NameTextBox.Text = goodsList[0].Name.ToString();
-            DescTextBox.Text = goodsList[0].Desc.ToString();
-            CategoryTextBox.Text = goodsList[0].Category.ToString();
-            RateTextBox.Text = goodsList[0].Rate.ToString();
-            PriceTextBox.Text = goodsList[0].Price.ToString();
-            AmountTextBox.Text = goodsList[0].Amount.ToString();
+            NameTextBox.Text = goodsList[0].name.ToString();
+            DescTextBox.Text = goodsList[0].desc.ToString();
+            CategoryTextBox.Text = goodsList[0].category.ToString();
+            RateTextBox.Text = goodsList[0].rate.ToString();
+            PriceTextBox.Text = goodsList[0].price.ToString();
+            AmountTextBox.Text = goodsList[0].amount.ToString();
         }
 
         private async Task UpdateDB()
         {
-            int goodsIdToUpdate = goodsList[0].Id;
+            int goodsIdToUpdate = goodsList[0].id;
 
             using (var context = new CodeFirstModel())
             {

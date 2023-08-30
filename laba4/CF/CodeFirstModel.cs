@@ -12,12 +12,12 @@ namespace laba4
         {
         }
 
-        public virtual DbSet<Category1> Categories { get; set; }
-        public virtual DbSet<Good1> Goods { get; set; }
+        public virtual DbSet<Categories> Categories { get; set; }
+        public virtual DbSet<Goods> Goods { get; set; }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<Good1>()
+            modelBuilder.Entity<Goods>()
                 .HasOptional(e => e.Category1)
                 .WithRequired(e => e.Good);
         }

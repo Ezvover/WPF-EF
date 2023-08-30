@@ -1,0 +1,60 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Schema Namespace="GoodsLabModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
+  <EntityType Name="Category">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="Int32" Nullable="false" />
+    <Property Name="category1" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+    <NavigationProperty Name="Good" Relationship="Self.FK__Category__id__398D8EEE" FromRole="Category" ToRole="Goods" />
+  </EntityType>
+  <EntityType Name="Good">
+    <Key>
+      <PropertyRef Name="id" />
+    </Key>
+    <Property Name="id" Type="Int32" Nullable="false" />
+    <Property Name="name" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+    <Property Name="desc" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+    <Property Name="category" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
+    <Property Name="rate" Type="Int32" />
+    <Property Name="price" Type="Int32" />
+    <Property Name="amount" Type="Int32" />
+    <Property Name="other" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+    <Property Name="picture" Type="Binary" MaxLength="Max" FixedLength="false" />
+    <NavigationProperty Name="Category1" Relationship="Self.FK__Category__id__398D8EEE" FromRole="Goods" ToRole="Category" />
+  </EntityType>
+  <Association Name="FK__Category__id__398D8EEE">
+    <End Role="Goods" Type="Self.Good" Multiplicity="1" />
+    <End Role="Category" Type="Self.Category" Multiplicity="0..1" />
+    <ReferentialConstraint>
+      <Principal Role="Goods">
+        <PropertyRef Name="id" />
+      </Principal>
+      <Dependent Role="Category">
+        <PropertyRef Name="id" />
+      </Dependent>
+    </ReferentialConstraint>
+  </Association>
+  <EntityContainer Name="GoodsLabEntities" annotation:LazyLoadingEnabled="true">
+    <EntitySet Name="Categories" EntityType="Self.Category" />
+    <EntitySet Name="Goods" EntityType="Self.Good" />
+    <AssociationSet Name="FK__Category__id__398D8EEE" Association="Self.FK__Category__id__398D8EEE">
+      <End Role="Goods" EntitySet="Goods" />
+      <End Role="Category" EntitySet="Categories" />
+    </AssociationSet>
+    <FunctionImport Name="GetGoodsByCategory" ReturnType="Collection(GoodsLabModel.GetGoodsByCategory_Result)">
+      <Parameter Name="Category" Mode="In" Type="String" />
+    </FunctionImport>
+    <FunctionImport Name="usp_GetGoods" ReturnType="Collection(Int32)" />
+  </EntityContainer>
+  <ComplexType Name="GetGoodsByCategory_Result">
+    <Property Type="Int32" Name="id" Nullable="false" />
+    <Property Type="String" Name="name" Nullable="true" MaxLength="50" />
+    <Property Type="String" Name="desc" Nullable="true" MaxLength="50" />
+    <Property Type="String" Name="category" Nullable="true" MaxLength="50" />
+    <Property Type="Int32" Name="rate" Nullable="true" />
+    <Property Type="Int32" Name="price" Nullable="true" />
+    <Property Type="Int32" Name="amount" Nullable="true" />
+    <Property Type="String" Name="other" Nullable="true" />
+  </ComplexType>
+</Schema>

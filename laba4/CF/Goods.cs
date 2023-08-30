@@ -7,7 +7,7 @@ namespace laba4
     using System.Data.Entity.Spatial;
 
     [Table("Goods")]
-    public partial class Good1
+    public partial class Goods
     {
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int id { get; set; }
@@ -32,6 +32,6 @@ namespace laba4
         [Column(TypeName = "image")]
         public byte[] picture { get; set; }
 
-        public virtual Category1 Category1 { get; set; }
+        public virtual Categories Category1 { get; set; }
     }
 }
