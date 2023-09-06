@@ -144,15 +144,22 @@ namespace laba4
 
         private void AddButton_Click(object sender, RoutedEventArgs e)
         {
-            if ((int.Parse(RateTextBox.Text) < 0) || (double.Parse(PriceTextBox.Text) < 0) || (int.Parse(AmountTextBox.Text) < 0))
+            try
             {
-                MessageBox.Show("Данные меньше нуля");
+                if ((int.Parse(RateTextBox.Text) < 0) || (double.Parse(PriceTextBox.Text) < 0) || (int.Parse(AmountTextBox.Text) < 0) || string.IsNullOrWhiteSpace(NameTextBox.Text) || string.IsNullOrWhiteSpace(CategoryTextBox.Text))
+                {
+                    MessageBox.Show("Ошибка");
+                }
+                else
+                {
+                    UpdateDB();
+                    File.Delete("TempEditGood.xml");
+                    this.Close();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                UpdateDB();
-                File.Delete("TempEditGood.xml");
-                this.Close();
+                MessageBox.Show(ex.Message);
             }
         }
     }
